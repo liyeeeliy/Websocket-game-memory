@@ -11,7 +11,7 @@ Dua pemain saling berhadapan dalam satu room, bergiliran membuka kartu untuk men
 | Nama | NPM | Peran |
 |---|---|---|
 | Mauliya Rahmi| 2410010267 | Frontend|
-| Halimatuss'adiah |2410010269| Backend |
+| Halimatussa'diah |2410010269| Backend |
 | Meisheila Leluni Kuswoyo| 2410010276 | Laporan Akhir |
 | Muhammad Khairil Ilham | 2410010205 | Database |
 |  Muhammad Ixmal Alimudin | 2410010280 |Statistik |
