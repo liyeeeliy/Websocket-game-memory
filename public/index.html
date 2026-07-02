@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!--
+        ws-host override (opsional):
+        Uncomment baris di bawah untuk force ke host tertentu.
+        Kalau tidak ada, URL WebSocket otomatis mengikuti window.location.
+    -->
+    <!-- <meta name="ws-host" content="wss://myserver.com"> -->
+    <title>Memory Match Multiplayer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="sidebar-overlay"></div>
+
+<!-- ==================== SCREEN 1: LOGIN ==================== -->
+<div id="screen-login" class="screen active">
+
+    <!-- Floating decorative blobs -->
+    <div class="auth-blob auth-blob-1"></div>
+    <div class="auth-blob auth-blob-2"></div>
+    <div class="auth-blob auth-blob-3"></div>
+
+    <div class="auth-card">
+
+        <!-- Logo -->
+        <div class="auth-logo-wrap">
+            <div class="auth-logo-icon">🃏</div>
+            <div class="auth-logo-title">Memory Match</div>
+            <div class="auth-logo-sub">𓇼 ⋆.˚ 𓆉 𓆝 𓆡 Multiplayer Card Game</div>
+        </div>
+
+        <!-- Tab toggle -->
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Login</button>
+            <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Register</button>
+            <div class="auth-tab-slider" id="auth-tab-slider"></div>
+        </div>
+
+        <!-- Form Login -->
+        <div id="form-login" class="auth-form">
+            <div class="auth-field">
+                <span class="auth-field-icon">👤</span>
+                <input type="text" id="login-username" placeholder="Username" maxlength="16"
+                       autocomplete="username"
+                       onkeypress="if(event.key==='Enter') document.getElementById('login-password').focus()">
+            </div>
+            <div class="auth-field">
+                <span class="auth-field-icon">🔒</span>
+                <input type="password" id="login-password" placeholder="Password"
+                       autocomplete="current-password"
+                       onkeypress="if(event.key==='Enter') doLogin()">
+                <button class="auth-eye-btn" type="button" onclick="togglePw('login-password', this)">👁</button>
+            </div>
+            <button class="auth-submit-btn" id="btn-login" onclick="doLogin()">
+                <span class="auth-btn-text">Masuk ke Lobby</span>
+                <span class="auth-btn-icon">🚀</span>
+            </button>
+        </div>
+
+        <!-- Form Register -->
+        <div id="form-register" class="auth-form" style="display:none;">
+            <div class="auth-field">
+                <span class="auth-field-icon">👤</span>
+                <input type="text" id="reg-username" placeholder="Username (3–16 karakter)" maxlength="16"
+                       autocomplete="username"
+                       onkeypress="if(event.key==='Enter') document.getElementById('reg-password').focus()">
+            </div>
+            <div class="auth-field">
+                <span class="auth-field-icon">🔒</span>
+                <input type="password" id="reg-password" placeholder="Password (min 6 karakter)"
+                       autocomplete="new-password"
+                       onkeypress="if(event.key==='Enter') document.getElementById('reg-password2').focus()">
+                <button class="auth-eye-btn" type="button" onclick="togglePw('reg-password', this)">👁</button>
+            </div>
+            <div class="auth-field">
+                <span class="auth-field-icon">✅</span>
+                <input type="password" id="reg-password2" placeholder="Konfirmasi password"
+                       autocomplete="new-password"
+                       onkeypress="if(event.key==='Enter') doRegister()">
+            </div>
+            <button class="auth-submit-btn" id="btn-register" onclick="doRegister()">
+                <span class="auth-btn-text">Buat Akun</span>
+                <span class="auth-btn-icon">✨</span>
+            </button>
+        </div>
+
+        <!-- Error & status -->
+        <div id="auth-error" class="auth-error-msg"></div>
+        <div id="status" class="auth-status-msg">Belum terhubung</div>
+
+    </div>
+</div>
+
+<!-- ==================== SCREEN 2: LOBBY ==================== -->
+<div id="screen-lobby" class="screen">
+    <div class="lobby-box">
+        <div class="lobby-title">💖 Lobby Room</div>
+
+        <div>
+            <div class="diff-label">Room Code kamu:</div>
+            <div class="room-code-display" id="roomDisplay">----</div>
+        </div>
+
+        <div class="players-row">
+            <div class="player-slot filled" id="slot-p1">
+                <div class="player-avatar">👑</div>
+                <div class="player-name" id="lobby-p1-name">Host</div>
+                <div class="player-badge">Host</div>
+            </div>
+            <div class="player-slot" id="slot-p2">
+                <div class="player-avatar">⏳</div>
+                <div class="player-name" id="lobby-p2-name">Menunggu...</div>
+                <div id="badge-p2" class="player-badge" style="display:none;background:var(--purple);">Friend</div>
+            </div>
+        </div>
+
+        <div class="separator">atau bergabung ke room lain</div>
+
+        <div class="join-row">
+            <input type="text" id="roomInput" placeholder="Kode room..." maxlength="4"
+                   style="text-transform:uppercase"
+                   onkeypress="if(event.key==='Enter') joinRoom()">
+            <button class="btn" onclick="joinRoom()">Join</button>
+        </div>
+
+        <div class="separator">
+            room tersedia
+            <button class="mini-refresh-btn" onclick="requestRoomList()" title="Refresh daftar room">🔄</button>
+        </div>
+        <div id="room-list" class="lb-list room-list" style="max-height:130px;">
+            <div class="lb-empty">Memuat room...</div>
+        </div>
+
+        <div>
+            <div class="diff-label">Tingkat Kesulitan:</div>
+            <div class="diff-row">
+                <div class="diff-btn active" onclick="selectDiff(this,'easy')">🟢 Easy<br><small>3×4</small></div>
+                <div class="diff-btn" onclick="selectDiff(this,'medium')">🟡 Medium<br><small>4×5</small></div>
+                <div class="diff-btn" onclick="selectDiff(this,'hard')">🔴 Hard<br><small>5×6</small></div>
+            </div>
+        </div>
+
+        <button id="startBtn" class="btn" onclick="startGame()" disabled>▶ Mulai Game</button>
+
+        <div class="separator">atau latihan sendiri</div>
+        <button id="btn-vs-computer" class="btn btn-secondary" onclick="startSoloGame(selectedDifficulty)">🤖 Main vs Komputer</button>
+
+        <div id="lobby-status" style="text-align:center;font-size:12px;color:#ffb6c1;">
+            Buat room dulu atau join room yang ada
+        </div>
+        <button onclick="logoutGame()" style="margin-top:8px;background:none;border:none;color:#b06080;font-size:12px;cursor:pointer;text-decoration:underline;">
+            🚪 Logout
+        </button>
+    </div>
+
+    <!-- LEADERBOARD PANEL (sejajar kanan, desktop only) -->
+    <div class="lobby-lb-panel">
+        <div class="lobby-title" style="font-size:16px;margin-bottom:8px;">🏆 Leaderboard</div>
+        <div class="lb-tabs" id="lobby-lb-tabs">
+            <button class="lb-tab active" data-mode="wins" onclick="switchLobbyLb(this,'wins')">Wins</button>
+            <button class="lb-tab" data-mode="score" onclick="switchLobbyLb(this,'score')">Score</button>
+            <button class="lb-tab" data-mode="best" onclick="switchLobbyLb(this,'best')">Best</button>
+        </div>
+        <div id="lobby-lb-list" class="lb-list" style="max-height:100%;"></div>
+    </div>
+
+</div>
+
+<!-- ==================== SCREEN 3: GAME ==================== -->
+<div id="screen-game" class="screen">
+
+    <!-- SIDEBAR (drawer mobile / static desktop) -->
+    <div class="game-sidebar">
+        <button class="close-sidebar-btn" onclick="toggleSidebar()">✕</button>
+        <div class="panel">
+            <h4>🏠 Room</h4>
+            <div style="font-size:11px;color:#b06080;">Kode:</div>
+            <div style="font-family:'Fredoka One',cursive;font-size:20px;color:var(--accent);letter-spacing:4px;" id="game-room-code">----</div>
+        </div>
+        <div class="panel chat" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+            <h4>💬 Chat</h4>
+            <div id="chat-box" style="flex:1;overflow-y:auto;min-height:60px;"></div>
+            <div class="chat-input" style="margin-top:8px;">
+                <input id="chatInput" placeholder="Ketik pesan..."
+                       onkeypress="if(event.key==='Enter') sendChat()">
+                <button onclick="sendChat()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="game-center">
+
+        <div class="game-header">
+            <div class="header-left">
+                <button id="hamburger-btn" onclick="toggleSidebar()">☰</button>
+                <div class="game-logo">Memory Match 💕</div>
+            </div>
+            <div id="timer">⏱ 15s</div>
+            <div id="turnIndicator">Menunggu...</div>
+        </div>
+
+        <div class="scoreboard">
+            <div class="score-card" id="score-0">
+                <div class="score-avatar">👑</div>
+                <div class="score-info">
+                    <div class="score-name" id="sname-0">Player 1</div>
+                    <div class="score-pts"  id="spts-0">0</div>
+                </div>
+            </div>
+            <div class="score-card" id="score-1">
+                <div class="score-avatar">🎮</div>
+                <div class="score-info">
+                    <div class="score-name" id="sname-1">Player 2</div>
+                    <div class="score-pts"  id="spts-1">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="board-wrapper">
+            <div id="board"></div>
+        </div>
+
+        <!-- Progress strip: di bawah board, di atas bottom bar (mobile portrait) -->
+        <div class="progress-strip">
+            <div class="progress-bar-wrap"><div id="progressBar"></div></div>
+            <span id="progressText">0/0</span>
+        </div>
+
+        <!-- Mobile bottom bar -->
+        <div class="game-bottom">
+            <span id="game-room-code-m" class="room-inline">----</span>
+            <div style="flex:1;"></div>
+            <button id="chat-toggle" onclick="openChatOverlay()">💬</button>
+        </div>
+
+    </div>
+
+    <!-- RIGHT SIDEBAR (desktop only) -->
+    <div class="game-right">
+        <div class="panel">
+            <h4>📜 Cara Main</h4>
+            <ul class="howto-list">
+                <li>🃏 Buka 2 kartu</li>
+                <li>✅ +10 poin jika pasangan</li>
+                <li>❌ -5 poin jika waktu habis</li>
+                <li>⏱ 15 detik per giliran</li>
+                <li>🏆 Skor terbanyak menang!</li>
+            </ul>
+        </div>
+
+        <div class="panel" style="text-align:center;">
+            <h4>📊 Progress</h4>
+            <div class="progress-bar-wrap" style="margin-top:6px;background:rgba(255,180,200,0.3);">
+                <div id="progressBar2" style="height:100%;background:linear-gradient(90deg,var(--pink),var(--purple));border-radius:6px;transition:width 0.5s;width:0%;"></div>
+            </div>
+            <div id="progressText2" style="font-size:12px;color:#ffb6c1;margin-top:4px;">0 / 0 pasang</div>
+        </div>
+
+        <!-- LEADERBOARD PANEL -->
+        <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+            <h4>🏆 Leaderboard</h4>
+            <div class="lb-tabs">
+                <button class="lb-tab active" data-mode="wins">Wins</button>
+                <button class="lb-tab" data-mode="score">Score</button>
+                <button class="lb-tab" data-mode="best">Best</button>
+            </div>
+            <div id="lb-list" class="lb-list">
+                <div class="lb-empty">Memuat...</div>
+            </div>
+        </div>
+
+        <div class="panel" style="text-align:center;">
+            <h4>🃏 Legenda</h4>
+            <div style="font-size:11px;color:#b06080;line-height:2.4;">
+                <span style="background:linear-gradient(135deg,#ff6fa5,#c084fc);color:white;padding:2px 8px;border-radius:6px;">Tertutup</span><br>
+                <span style="background:linear-gradient(135deg,#fff0f5,#ffe4ef);border:1.5px solid #ff6fa5;padding:2px 8px;border-radius:6px;">Giliran kamu</span><br>
+                <span style="background:linear-gradient(135deg,#f0f0ff,#e8e0ff);border:1.5px solid #c084fc;padding:2px 8px;border-radius:6px;">Lawan buka</span><br>
+                <span style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);border:1.5px solid #22c55e;padding:2px 8px;border-radius:6px;">Match! ✅</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- MOBILE CHAT BOTTOM SHEET -->
+<div id="chat-overlay">
+    <div class="chat-handle"></div>
+    <div id="chat-box-m"></div>
+    <div class="chat-input">
+        <input id="chatInputM" placeholder="Ketik pesan..."
+               onkeypress="if(event.key==='Enter') sendChat()">
+        <button onclick="sendChat()">➤</button>
+    </div>
+</div>
+
+<!-- OVERLAY: GAME OVER -->
+<div id="overlay-gameover">
+    <div class="gameover-box">
+        <div class="gameover-trophy">🏆</div>
+        <div class="gameover-title">Game Selesai!</div>
+        <div class="gameover-winner" id="winner-text">---</div>
+        <div class="gameover-scores" id="final-scores"></div>
+        <div class="gameover-actions">
+            <button id="btn-main-lagi" class="btn" onclick="requestRestart()">🔄 Main Lagi</button>
+            <button class="btn" onclick="exitGame()" style="background:linear-gradient(135deg,#aaa,#ccc);box-shadow:none;">🚪 Keluar</button>
+        </div>
+    </div>
+</div>
+
+<!-- OVERLAY: KONFIRMASI RESTART (Player 2) -->
+<div id="overlay-restart-confirm">
+    <div class="restart-confirm-box">
+        <div class="restart-confirm-icon">🔄</div>
+        <div class="restart-confirm-title">Main Lagi?</div>
+        <div class="restart-confirm-sub">
+            <strong id="restart-requester-name">Host</strong> mengajak kamu main lagi.<br>
+            Kamu mau ikut?
+        </div>
+        <div class="restart-btn-row">
+            <button class="btn" onclick="answerRestartConfirm(true)">✅ Ayo!</button>
+            <button class="btn btn-decline" onclick="answerRestartConfirm(false)">❌ Tidak</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
