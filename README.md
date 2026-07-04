@@ -22,9 +22,9 @@ Dua pemain saling berhadapan dalam satu room, bergiliran membuka kartu untuk men
 
 | Item | Link |
 |---|---|
-| Video Demo | - |
+| Video Demo | https://youtu.be/BNlZsj8WcEg?si=7SzjxaNx7f3It15R |
 | Proposal (PDF) | https://drive.google.com/file/d/1bvOkvZ2rAKJQAigj3fRT_gUDFbLzsB5B/view?usp=sharing |
-| Laporan Akhir (PDF) | - |
+| Laporan Akhir (PDF) | https://drive.google.com/drive/folders/1XLkKpo36vWpbqm8neVlcv5rNz8vXgaBL?usp=sharing|
 | Slide Presentasi (PDF) | https://drive.google.com/drive/folders/1jXUDbsvewBSGs3SpMtn77xHiy_lf5iH7?usp=sharing |
 
 ---
