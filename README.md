@@ -56,7 +56,7 @@ Dua pemain saling berhadapan dalam satu room, bergiliran membuka kartu untuk men
 
 | Login / Register | Lobby dan Room | Gameplay |
 |---|---|---|
-| ![Login](login.jpg) | ![Lobby](lobby.jpg) | ![Gameplay](gameplay.png) |
+| ![Login](login.jpg) | ![Lobby](lobby.jpg) | ![Gameplay](gameplay.jpg) |
 
 ---
 
